@@ -1,5 +1,4 @@
 # Salary Management System
-
 Backend & Frontend project for company payroll management.
 
 # Hệ thống quản lý lương công ty
@@ -38,7 +37,7 @@ frontend/
 ├─ vite.config.js          # Cấu hình Vite
 ├─ readme_api.md           # Hướng dẫn API frontend
 ├─ readme-features.md      # Hướng dẫn chức năng frontend
-├─ src/
-│  ├─ app/                 # Component / module
-│  ├─ styles/              # CSS / SCSS
-│  └─ main.js              # Khởi chạy frontend
+└─ src/
+   ├─ app/                 # Component / module
+   ├─ styles/              # CSS / SCSS
+   └─ main.js              # Khởi chạy frontend
