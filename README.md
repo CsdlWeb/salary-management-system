@@ -17,6 +17,8 @@ Dự án giúp quản lý:
 **Quản lý version:** Git + GitHub (Git Flow: main, dev, feature-*)  
 
 ## Cấu trúc thư mục
+
+```text
 backend/
 ├─ auth/                  # Folder xử lý login, phân quyền
 │  └─ *.py
