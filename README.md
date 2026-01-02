@@ -13,7 +13,7 @@ Dự án giúp quản lý:
 
 ## Công nghệ sử dụng
 **Backend:** Python, FastAPI, SQLAlchemy, MySQL/PostgreSQL  
-**Frontend:** Vite + React (hoặc Vue)  
+**Frontend:** Vite + React (TypeScipt)  
 **Quản lý version:** Git + GitHub (Git Flow: main, dev, feature-*)  
 
 ## Cấu trúc thư mục
