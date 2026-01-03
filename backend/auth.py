@@ -6,12 +6,13 @@ SECRET_KEY = "DUNGBACKEND_VERY_SECRET_KEY"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
 
-# Hàm kiểm tra mật khẩu (So sánh trực tiếp cho dễ test)
 def verify_password(plain_password, stored_password):
-    # So sánh trực tiếp chữ bạn nhập và chữ trong Database
     return str(plain_password) == str(stored_password)
 
-# Hàm tạo mã JWT Token
+# THÊM HÀM NÀY VÀO ĐỂ KHÔNG BỊ LỖI
+def get_password_hash(password):
+    return str(password) 
+
 def create_access_token(data: dict):
     to_encode = data.copy()
     expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
