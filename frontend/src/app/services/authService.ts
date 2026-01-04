@@ -9,32 +9,34 @@ export const authService = {
     username: string,
     password: string
   ): Promise<LoginResponse> => {
-    const res: ApiResponse<{
-      token: string;
-      role: 'admin' | 'user';
-      employee: any;
-    }> = await apiClient.post('/auth/login', {
-      username,
-      password,
-    });
+    try {
+      const response = await apiClient.post<{
+        access_token: string;
+        token_type: string;
+        role_id: number;
+      }>('/login', {
+        email: username, 
+        password,
+      });
 
-    if (!res.success || !res.data) {
-      throw new Error(res.message || 'Đăng nhập thất bại');
+      const role = response.role_id === 1 ? 'admin' : 'user';
+      const token = response.access_token;
+
+      // Lưu token & role
+      localStorage.setItem('authToken', token);
+      localStorage.setItem('userRole', role);
+
+      return {
+        success: true,
+        token,
+        role,
+        employee: null, 
+        message: 'Đăng nhập thành công',
+      };
+    } catch (error: any) {
+      // Re-throw error với message từ backend
+      throw new Error(error.message || 'Đăng nhập thất bại');
     }
-
-    const { token, role, employee } = res.data;
-
-    // Lưu token & role
-    localStorage.setItem('authToken', token);
-    localStorage.setItem('userRole', role);
-
-    return {
-      success: true,
-      token,
-      role,
-      employee,
-      message: res.message || 'Đăng nhập thành công',
-    };
   },
 
   /**

@@ -1,0 +1,22 @@
+# =====================
+# NodeJS (Frontend)
+# =====================
+frontend/node_modules/
+node_modules/
+
+# =====================
+# Python (Backend)
+# =====================
+backend/venv/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+
+# =====================
+# OS / Editor
+# =====================
+.vscode/
+.DS_Store
+.env
+
