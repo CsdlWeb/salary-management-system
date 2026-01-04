@@ -52,6 +52,11 @@ export const adminService = {
     return apiClient.delete(`/admin/departments/${id}`);
   },
 
+  // ========== POSITIONS ==========
+  getPositions: async (): Promise<ApiResponse<{ id: string; name: string; baseSalary: number }[]>> => {
+    return apiClient.get('/admin/positions');
+  },
+
   // ========== EMPLOYEES ==========
   getEmployees: async (): Promise<ApiResponse<AdminEmployee[]>> => {
     return apiClient.get('/admin/employees');

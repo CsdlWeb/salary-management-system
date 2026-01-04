@@ -38,7 +38,6 @@ export function PayrollManagement() {
       if (empRes.success && empRes.data) setEmployees(empRes.data);
     } catch (error) {
       toast.error('Lỗi khi tải dữ liệu');
-      console.error(error);
     } finally {
       setLoading(false);
     }
@@ -65,13 +64,26 @@ export function PayrollManagement() {
 
   const handleEdit = (entry: PayrollEntry) => {
     setEditingPayroll(entry);
+    let monthValue = entry.month;
+    if (entry.month && entry.month.includes('-')) {
+      const monthParts = entry.month.split('-');
+      if (monthParts.length >= 2) {
+        monthValue = String(parseInt(monthParts[1], 10));
+      }
+    } else if (entry.month && entry.month.length > 2) {
+      const date = new Date(entry.month);
+      if (!isNaN(date.getTime())) {
+        monthValue = String(date.getMonth() + 1);
+      }
+    }
+    
     setFormData({
       employeeId: entry.employeeId,
-      month: entry.month,
-      year: entry.year,
+      month: monthValue || String(new Date().getMonth() + 1),
+      year: entry.year || new Date().getFullYear(),
       baseSalary: entry.baseSalary,
       allowances: entry.allowances,
-      bonus: entry.bonus,
+      bonus: entry.bonus || 0,
       deductions: entry.deductions,
       status: entry.status
     });
@@ -102,20 +114,28 @@ export function PayrollManagement() {
         return;
       }
 
+      if (!formData.month || !formData.year) {
+        toast.error('Vui lòng chọn tháng và năm');
+        return;
+      }
+
       const netSalary = calculateNetSalary();
+      const monthStr = `${formData.year}-${String(formData.month).padStart(2, '0')}`;
+      
       const payrollData = {
-        ...formData,
-        employeeName: employee.name,
-        employeeCode: employee.employeeCode,
-        department: employee.department,
-        netSalary,
-        paidDate: formData.status === 'paid' ? new Date().toLocaleDateString('vi-VN') : undefined
+        employeeId: formData.employeeId,
+        month: monthStr,
+        baseSalary: formData.baseSalary,
+        allowances: formData.allowances + formData.bonus,
+        deductions: formData.deductions,
+        status: formData.status
       };
 
       if (editingPayroll) {
         const response = await adminService.updatePayroll(editingPayroll.id, payrollData);
         if (response.success) {
           toast.success('Cập nhật bảng lương thành công');
+          setEditingPayroll(null);
         }
       } else {
         const response = await adminService.createPayroll(payrollData);
@@ -172,7 +192,6 @@ export function PayrollManagement() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
@@ -189,7 +208,6 @@ export function PayrollManagement() {
         </button>
       </div>
 
-      {/* Search */}
       <div className="bg-white rounded-2xl p-4 shadow-md">
         <div className="relative">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -203,7 +221,6 @@ export function PayrollManagement() {
         </div>
       </div>
 
-      {/* Payroll Table */}
       <div className="bg-white rounded-2xl shadow-md overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
@@ -278,7 +295,6 @@ export function PayrollManagement() {
         )}
       </div>
 
-      {/* Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl w-full max-w-2xl">
@@ -300,16 +316,17 @@ export function PayrollManagement() {
                   <label className="block text-sm font-medium mb-2">Nhân Viên *</label>
                   <select
                     required
+                    disabled={!!editingPayroll}
                     value={formData.employeeId}
                     onChange={(e) => {
                       const emp = employees.find(emp => emp.id === e.target.value);
                       setFormData({ 
                         ...formData, 
                         employeeId: e.target.value,
-                        baseSalary: emp?.salary || 0
+                        baseSalary: emp?.salary || formData.baseSalary
                       });
                     }}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className={`w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${editingPayroll ? 'bg-gray-100 cursor-not-allowed' : ''}`}
                   >
                     <option value="">Chọn nhân viên</option>
                     {employees.map(emp => (
@@ -318,6 +335,9 @@ export function PayrollManagement() {
                       </option>
                     ))}
                   </select>
+                  {editingPayroll && (
+                    <p className="text-xs text-gray-500 mt-1">Không thể thay đổi nhân viên khi chỉnh sửa</p>
+                  )}
                 </div>
 
                 <div>

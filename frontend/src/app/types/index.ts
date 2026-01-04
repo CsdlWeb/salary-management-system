@@ -5,8 +5,8 @@ export interface Employee {
   name: string;
   email: string;
   phone: string;
-  dateOfBirth: string;
-  address: string;
+  dateOfBirth?: string;
+  address?: string;
   position: string;
   department: string;
   startDate: string;

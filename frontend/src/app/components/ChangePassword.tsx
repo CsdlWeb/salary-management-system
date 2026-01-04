@@ -69,7 +69,6 @@ export function ChangePassword() {
         toast.error(response.message || "Đổi mật khẩu thất bại!");
       }
     } catch (error) {
-      console.error("Change password error:", error);
       toast.error("Không thể đổi mật khẩu. Vui lòng thử lại!");
     }
   };

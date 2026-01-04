@@ -34,8 +34,10 @@ export const authService = {
         message: 'Đăng nhập thành công',
       };
     } catch (error: any) {
-      // Re-throw error với message từ backend
-      throw new Error(error.message || 'Đăng nhập thất bại');
+      if (error.message) {
+        throw error;
+      }
+      throw new Error('Đăng nhập thất bại');
     }
   },
 

@@ -45,32 +45,49 @@ export default function App() {
     try {
       setIsLoading(true);
 
-      // Call all APIs in parallel
-      const [profileRes, salaryRes, historyRes, notificationsRes] = await Promise.all([
+      const results = await Promise.allSettled([
         employeeService.getProfile(),
         employeeService.getSalary(),
         employeeService.getPaymentHistory(),
         employeeService.getNotifications(),
       ]);
 
-      if (profileRes.success && profileRes.data) {
-        setEmployee(profileRes.data);
+      if (results[0].status === 'fulfilled') {
+        const profileResponse = results[0].value;
+        if (profileResponse && profileResponse.success && profileResponse.data) {
+          setEmployee(profileResponse.data);
+        } else {
+          const errorMsg = profileResponse?.message || profileResponse?.error || 'Không thể tải thông tin hồ sơ. Vui lòng kiểm tra employee_id trong bảng users có khớp với employees không.';
+          toast.error(errorMsg);
+        }
+      } else if (results[0].status === 'rejected') {
+        const error = results[0].reason;
+        const errorMsg = error?.message || 'Lỗi khi tải thông tin hồ sơ. Vui lòng kiểm tra employee_id trong bảng users.';
+        toast.error(errorMsg);
       }
 
-      if (salaryRes.success && salaryRes.data) {
-        setSalary(salaryRes.data);
+      if (results[1].status === 'fulfilled') {
+        const salaryResponse = results[1].value;
+        if (salaryResponse && salaryResponse.success && salaryResponse.data) {
+          setSalary(salaryResponse.data);
+        }
       }
 
-      if (historyRes.success && historyRes.data) {
-        setPaymentHistory(historyRes.data);
+      if (results[2].status === 'fulfilled') {
+        const historyResponse = results[2].value;
+        if (historyResponse && historyResponse.success && historyResponse.data) {
+          setPaymentHistory(historyResponse.data);
+        }
       }
 
-      if (notificationsRes.success && notificationsRes.data) {
-        setNotifications(notificationsRes.data);
+      if (results[3].status === 'fulfilled') {
+        const notificationsResponse = results[3].value;
+        if (notificationsResponse && notificationsResponse.success && notificationsResponse.data) {
+          setNotifications(notificationsResponse.data);
+        }
       }
-    } catch (error) {
-      console.error("Error loading employee data:", error);
-      toast.error("Không thể tải dữ liệu. Vui lòng thử lại!");
+    } catch (error: any) {
+      toast.error('Lỗi khi tải dữ liệu: ' + (error.message || 'Unknown error'));
     } finally {
       setIsLoading(false);
     }
@@ -96,7 +113,6 @@ export default function App() {
         toast.error(response.message || "Đăng nhập thất bại!");
       }
     } catch (error: any) {
-      console.error("Login error:", error);
       toast.error(error.message || "Tên đăng nhập hoặc mật khẩu không đúng!");
     } finally {
       setIsLoading(false);
@@ -115,8 +131,6 @@ export default function App() {
       setAdminTab('dashboard');
       toast.info("Đã đăng xuất");
     } catch (error) {
-      console.error("Logout error:", error);
-      // Still logout locally even if API fails
       setIsLoggedIn(false);
       setUserRole(null);
       toast.info("Đã đăng xuất");
@@ -134,7 +148,6 @@ export default function App() {
         )
       );
     } catch (error) {
-      console.error("Error marking notification as read:", error);
     }
   };
 
@@ -149,7 +162,6 @@ export default function App() {
       
       toast.success("Đã đánh dấu tất cả thông báo là đã đọc");
     } catch (error) {
-      console.error("Error marking all notifications as read:", error);
       toast.error("Không thể cập nhật thông báo");
     }
   };
@@ -182,17 +194,15 @@ export default function App() {
           {adminTab === 'payroll' && <PayrollManagement />}
         </AdminLayout>
       ) : (
-        employee && salary && (
-          <EmployeeDashboard
-            employee={employee}
-            salary={salary}
-            paymentHistory={paymentHistory}
-            notifications={notifications}
-            onLogout={handleLogout}
-            onMarkNotificationAsRead={handleMarkNotificationAsRead}
-            onMarkAllNotificationsAsRead={handleMarkAllNotificationsAsRead}
-          />
-        )
+        <EmployeeDashboard
+          employee={employee}
+          salary={salary}
+          paymentHistory={paymentHistory}
+          notifications={notifications}
+          onLogout={handleLogout}
+          onMarkNotificationAsRead={handleMarkNotificationAsRead}
+          onMarkAllNotificationsAsRead={handleMarkAllNotificationsAsRead}
+        />
       )}
       <Toaster />
     </>

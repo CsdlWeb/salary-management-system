@@ -11,8 +11,8 @@ import { LogOut, User, DollarSign, History, Lock, Bell } from "lucide-react";
 import { Employee, Salary, PaymentRecord, Notification } from "../types";
 
 interface EmployeeDashboardProps {
-  employee: Employee;
-  salary: Salary;
+  employee: Employee | null;
+  salary: Salary | null;
   paymentHistory: PaymentRecord[];
   notifications: Notification[];
   onLogout: () => void;
@@ -55,7 +55,7 @@ export function EmployeeDashboard({
           <div className="flex justify-between items-center">
             <div>
               <h1 className="text-2xl text-white">Hệ Thống Quản Lý Nhân Viên</h1>
-              <p className="text-sm text-indigo-100 mt-1">Xin chào, {employee.name}</p>
+              <p className="text-sm text-indigo-100 mt-1">Xin chào, {employee?.name || 'Nhân viên'}</p>
             </div>
             <div className="flex items-center gap-3">
               <Button
@@ -120,11 +120,27 @@ export function EmployeeDashboard({
 
           <div className="mt-6">
             <TabsContent value="profile">
-              <EmployeeProfile employee={employee} />
+              {employee ? (
+                <EmployeeProfile employee={employee} />
+              ) : (
+                <div className="bg-white rounded-lg shadow-md p-8 text-center">
+                  <div className="flex flex-col items-center gap-4">
+                    <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                    <p className="text-gray-500">Đang tải thông tin hồ sơ...</p>
+                    <p className="text-sm text-gray-400">Nếu thông tin không hiển thị, vui lòng kiểm tra lại kết nối hoặc liên hệ quản trị viên</p>
+                  </div>
+                </div>
+              )}
             </TabsContent>
 
             <TabsContent value="salary">
-              <SalaryInfo salary={salary} />
+              {salary ? (
+                <SalaryInfo salary={salary} />
+              ) : (
+                <div className="bg-white rounded-lg shadow-md p-8 text-center">
+                  <p className="text-gray-500">Đang tải thông tin lương...</p>
+                </div>
+              )}
             </TabsContent>
 
             <TabsContent value="history">

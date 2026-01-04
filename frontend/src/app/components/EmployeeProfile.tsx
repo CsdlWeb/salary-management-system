@@ -1,7 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
-import { Badge } from "./ui/badge";
-import { Mail, Phone, MapPin, Calendar, Building, User } from "lucide-react";
+import { Mail, Phone, Calendar, Building, User } from "lucide-react";
 import { Employee } from "../types";
 
 interface EmployeeProfileProps {
@@ -28,9 +27,6 @@ export function EmployeeProfile({ employee }: EmployeeProfileProps) {
             <div className="flex-1 space-y-4">
               <div>
                 <h3 className="text-xl mb-1">{employee.name}</h3>
-                <Badge variant={employee.status === "active" ? "default" : "secondary"}>
-                  {employee.status === "active" ? "Đang làm việc" : "Nghỉ việc"}
-                </Badge>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="flex items-start gap-3">
@@ -65,33 +61,9 @@ export function EmployeeProfile({ employee }: EmployeeProfileProps) {
                   <Calendar className="w-5 h-5 text-gray-500 mt-0.5" />
                   <div>
                     <p className="text-sm text-gray-500">Ngày vào làm</p>
-                    <p>{employee.startDate}</p>
+                    <p>{employee.startDate ? new Date(employee.startDate).toLocaleDateString('vi-VN') : 'Chưa cập nhật'}</p>
                   </div>
                 </div>
-                <div className="flex items-start gap-3">
-                  <MapPin className="w-5 h-5 text-gray-500 mt-0.5" />
-                  <div>
-                    <p className="text-sm text-gray-500">Ngày sinh</p>
-                    <p>{employee.dateOfBirth}</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card className="shadow-lg border-0">
-        <CardHeader className="bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-t-lg">
-          <CardTitle>Thông Tin Liên Hệ</CardTitle>
-        </CardHeader>
-        <CardContent className="bg-white">
-          <div className="space-y-3">
-            <div className="flex items-start gap-3">
-              <MapPin className="w-5 h-5 text-gray-500 mt-0.5" />
-              <div>
-                <p className="text-sm text-gray-500">Địa chỉ</p>
-                <p>{employee.address}</p>
               </div>
             </div>
           </div>

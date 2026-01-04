@@ -19,7 +19,6 @@ export function AdminLayout({ children, currentTab, onTabChange, onLogout }: Adm
       toast.success('Đăng xuất thành công');
       onLogout();
     } catch (error) {
-      console.error('Logout error:', error);
     }
   };
 

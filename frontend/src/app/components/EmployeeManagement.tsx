@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 export function EmployeeManagement() {
   const [employees, setEmployees] = useState<AdminEmployee[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
+  const [positions, setPositions] = useState<{ id: string; name: string; baseSalary: number }[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [showModal, setShowModal] = useState(false);
@@ -15,9 +16,8 @@ export function EmployeeManagement() {
     name: '',
     email: '',
     phone: '',
-    dateOfBirth: '',
-    address: '',
     position: '',
+    positionId: '',
     departmentId: '',
     department: '',
     startDate: '',
@@ -32,16 +32,25 @@ export function EmployeeManagement() {
   const loadData = async () => {
     try {
       setLoading(true);
-      const [empRes, deptRes] = await Promise.all([
+      const [empRes, deptRes, posRes] = await Promise.all([
         adminService.getEmployees(),
-        adminService.getDepartments()
+        adminService.getDepartments(),
+        adminService.getPositions()
       ]);
       
       if (empRes.success && empRes.data) setEmployees(empRes.data);
-      if (deptRes.success && deptRes.data) setDepartments(deptRes.data);
+      if (deptRes.success && deptRes.data) {
+        setDepartments(deptRes.data);
+      } else {
+        toast.error('Không thể tải danh sách phòng ban');
+      }
+      if (posRes.success && posRes.data) {
+        setPositions(posRes.data);
+      } else {
+        toast.error('Không thể tải danh sách chức vụ');
+      }
     } catch (error) {
       toast.error('Lỗi khi tải dữ liệu');
-      console.error(error);
     } finally {
       setLoading(false);
     }
@@ -53,9 +62,8 @@ export function EmployeeManagement() {
       name: '',
       email: '',
       phone: '',
-      dateOfBirth: '',
-      address: '',
       position: '',
+      positionId: '',
       departmentId: '',
       department: '',
       startDate: '',
@@ -65,22 +73,75 @@ export function EmployeeManagement() {
     setShowModal(true);
   };
 
-  const handleEdit = (employee: AdminEmployee) => {
-    setEditingEmployee(employee);
-    setFormData({
-      name: employee.name,
-      email: employee.email,
-      phone: employee.phone,
-      dateOfBirth: employee.dateOfBirth,
-      address: employee.address,
-      position: employee.position,
-      departmentId: employee.departmentId,
-      department: employee.department,
-      startDate: employee.startDate,
-      salary: employee.salary,
-      status: employee.status
-    });
-    setShowModal(true);
+  const formatDateForInput = (dateStr: string): string => {
+    if (!dateStr) return '';
+    try {
+      const date = new Date(dateStr);
+      if (isNaN(date.getTime())) {
+        const parts = dateStr.split('/');
+        if (parts.length === 3) {
+          return dateStr;
+        }
+        return '';
+      }
+      const day = String(date.getDate()).padStart(2, '0');
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const year = date.getFullYear();
+      return `${day}/${month}/${year}`;
+    } catch {
+      return dateStr;
+    }
+  };
+
+  const parseDateForBackend = (dateStr: string): string => {
+    if (!dateStr) return '';
+    try {
+      const parts = dateStr.split('/');
+      if (parts.length === 3) {
+        const [day, month, year] = parts;
+        return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+      }
+      const date = new Date(dateStr);
+      if (!isNaN(date.getTime())) {
+        return date.toISOString().split('T')[0];
+      }
+      return dateStr;
+    } catch {
+      return dateStr;
+    }
+  };
+
+  const handleEdit = async (employee: AdminEmployee) => {
+    try {
+      if (departments.length === 0 || positions.length === 0) {
+        await loadData();
+      }
+      
+      const response = await adminService.getEmployee(employee.id);
+      if (response.success && response.data) {
+        const empData = response.data;
+        const hireDate = empData.startDate || (empData as any).hireDate || '';
+        
+        setEditingEmployee(empData);
+        setFormData({
+          name: empData.name || '',
+          email: empData.email || '',
+          phone: empData.phone || '',
+          position: empData.position || '',
+          positionId: (empData as any).positionId || '',
+          departmentId: empData.departmentId || '',
+          department: empData.department || '',
+          startDate: formatDateForInput(hireDate),
+          salary: empData.salary || 0,
+          status: empData.status || 'active'
+        });
+        setShowModal(true);
+      } else {
+        toast.error('Không thể tải thông tin nhân viên');
+      }
+    } catch (error: any) {
+      toast.error(error.message || 'Lỗi khi tải thông tin nhân viên');
+    }
   };
 
   const handleDelete = async (id: string) => {
@@ -102,15 +163,20 @@ export function EmployeeManagement() {
 
     try {
       const dept = departments.find(d => d.id === formData.departmentId);
+      const pos = positions.find(p => p.id === formData.positionId);
       const employeeData = {
         ...formData,
-        department: dept?.name || formData.department
+        department: dept?.name || formData.department,
+        position: pos?.name || formData.position,
+        positionId: formData.positionId,
+        hireDate: parseDateForBackend(formData.startDate)
       };
 
       if (editingEmployee) {
         const response = await adminService.updateEmployee(editingEmployee.id, employeeData);
         if (response.success) {
           toast.success('Cập nhật nhân viên thành công');
+          setEditingEmployee(null);
         }
       } else {
         const response = await adminService.createEmployee(employeeData);
@@ -163,7 +229,6 @@ export function EmployeeManagement() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
@@ -180,7 +245,6 @@ export function EmployeeManagement() {
         </button>
       </div>
 
-      {/* Search */}
       <div className="bg-white rounded-2xl p-4 shadow-md">
         <div className="relative">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -194,7 +258,6 @@ export function EmployeeManagement() {
         </div>
       </div>
 
-      {/* Employee Table */}
       <div className="bg-white rounded-2xl shadow-md overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
@@ -266,7 +329,6 @@ export function EmployeeManagement() {
         )}
       </div>
 
-      {/* Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -318,29 +380,6 @@ export function EmployeeManagement() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-2">Ngày Sinh *</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="DD/MM/YYYY"
-                    value={formData.dateOfBirth}
-                    onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium mb-2">Địa Chỉ *</label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.address}
-                    onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-
-                <div>
                   <label className="block text-sm font-medium mb-2">Phòng Ban *</label>
                   <select
                     required
@@ -349,21 +388,40 @@ export function EmployeeManagement() {
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="">Chọn phòng ban</option>
-                    {departments.map(dept => (
-                      <option key={dept.id} value={dept.id}>{dept.name}</option>
-                    ))}
+                    {departments.length > 0 ? (
+                      departments.map(dept => (
+                        <option key={dept.id} value={dept.id}>{dept.name}</option>
+                      ))
+                    ) : (
+                      <option value="" disabled>Đang tải phòng ban...</option>
+                    )}
                   </select>
+                  {departments.length === 0 && (
+                    <p className="text-xs text-red-500 mt-1">Không có dữ liệu phòng ban. Vui lòng tải lại trang.</p>
+                  )}
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium mb-2">Chức Vụ *</label>
-                  <input
-                    type="text"
+                  <select
                     required
-                    value={formData.position}
-                    onChange={(e) => setFormData({ ...formData, position: e.target.value })}
+                    value={formData.positionId}
+                    onChange={(e) => {
+                      const selectedPos = positions.find(p => p.id === e.target.value);
+                      setFormData({ 
+                        ...formData, 
+                        positionId: e.target.value,
+                        position: selectedPos?.name || '',
+                        salary: selectedPos?.baseSalary || formData.salary
+                      });
+                    }}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
+                  >
+                    <option value="">Chọn chức vụ</option>
+                    {positions.map(pos => (
+                      <option key={pos.id} value={pos.id}>{pos.name}</option>
+                    ))}
+                  </select>
                 </div>
 
                 <div>

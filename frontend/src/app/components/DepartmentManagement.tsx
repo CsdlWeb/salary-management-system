@@ -31,7 +31,6 @@ export function DepartmentManagement() {
       }
     } catch (error) {
       toast.error('Lỗi khi tải dữ liệu phòng ban');
-      console.error(error);
     } finally {
       setLoading(false);
     }
@@ -80,12 +79,22 @@ export function DepartmentManagement() {
 
     try {
       if (editingDepartment) {
-        const response = await adminService.updateDepartment(editingDepartment.id, formData);
+        const response = await adminService.updateDepartment(editingDepartment.id, { 
+          name: formData.name,
+          code: formData.code,
+          manager: formData.manager,
+          employeeCount: formData.employeeCount
+        });
         if (response.success) {
           toast.success('Cập nhật phòng ban thành công');
         }
       } else {
-        const response = await adminService.createDepartment(formData);
+        const response = await adminService.createDepartment({ 
+          name: formData.name,
+          code: '',
+          manager: '',
+          employeeCount: 0
+        });
         if (response.success) {
           toast.success('Thêm phòng ban thành công');
         }
@@ -117,7 +126,6 @@ export function DepartmentManagement() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
@@ -134,7 +142,6 @@ export function DepartmentManagement() {
         </button>
       </div>
 
-      {/* Search */}
       <div className="bg-white rounded-2xl p-4 shadow-md">
         <div className="relative">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -148,7 +155,6 @@ export function DepartmentManagement() {
         </div>
       </div>
 
-      {/* Department Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredDepartments.map((department) => (
           <div key={department.id} className="bg-white rounded-2xl shadow-md p-6 hover:shadow-lg transition-shadow">
@@ -187,18 +193,6 @@ export function DepartmentManagement() {
                 </span>
               </div>
 
-              <div>
-                <p className="text-sm text-gray-500 mb-1">Trưởng phòng:</p>
-                <p className="font-medium">{department.manager}</p>
-              </div>
-
-              {department.description && (
-                <div>
-                  <p className="text-sm text-gray-500 mb-1">Mô tả:</p>
-                  <p className="text-sm text-gray-600">{department.description}</p>
-                </div>
-              )}
-
               <div className="pt-3 border-t border-gray-100">
                 <p className="text-xs text-gray-500">
                   Ngày tạo: {department.createdDate}
@@ -215,7 +209,6 @@ export function DepartmentManagement() {
         </div>
       )}
 
-      {/* Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl w-full max-w-lg">
@@ -232,17 +225,18 @@ export function DepartmentManagement() {
             </div>
 
             <form onSubmit={handleSubmit} className="p-6 space-y-4">
-              <div>
-                <label className="block text-sm font-medium mb-2">Mã Phòng Ban *</label>
-                <input
-                  type="text"
-                  required
-                  value={formData.code}
-                  onChange={(e) => setFormData({ ...formData, code: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="VD: IT, HR, ACC..."
-                />
-              </div>
+              {editingDepartment && (
+                <div>
+                  <label className="block text-sm font-medium mb-2">Mã Phòng Ban</label>
+                  <input
+                    type="text"
+                    disabled
+                    value={formData.code}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Mã phòng ban được tự động tạo</p>
+                </div>
+              )}
 
               <div>
                 <label className="block text-sm font-medium mb-2">Tên Phòng Ban *</label>
@@ -253,29 +247,6 @@ export function DepartmentManagement() {
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="VD: Phòng Công Nghệ"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-2">Trưởng Phòng *</label>
-                <input
-                  type="text"
-                  required
-                  value={formData.manager}
-                  onChange={(e) => setFormData({ ...formData, manager: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Họ tên trưởng phòng"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-2">Mô Tả</label>
-                <textarea
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  rows={3}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Mô tả ngắn về phòng ban..."
                 />
               </div>
 

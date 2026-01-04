@@ -34,7 +34,6 @@ export function AdminDashboard() {
       if (payrollRes.success && payrollRes.data) setMonthlyPayroll(payrollRes.data);
     } catch (error) {
       toast.error('Lỗi khi tải dữ liệu thống kê');
-      console.error(error);
     } finally {
       setLoading(false);
     }
